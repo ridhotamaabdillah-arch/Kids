@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toko Online Sederhana</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .cart-sidebar {
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%);
+        }
+        .cart-sidebar.open {
+            transform: translateX(0);
+        }
+        .modal {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-3xl font-bold text-gray-900">TokoKita</h1>
+            <div class="relative">
+                <button id="cart-button" class="bg-gray-200 p-3 rounded-full hover:bg-gray-300 transition-colors duration-200 relative">
+                    <i data-lucide="shopping-cart"></i>
+                    <span id="cart-count" class="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center opacity-0 transition-opacity duration-200">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content - Product Grid -->
+    <main class="container mx-auto px-4 py-8">
+        <h2 class="text-3xl font-semibold text-center mb-8">Produk Pilihan</h2>
+        <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Products will be dynamically inserted here -->
+        </div>
+    </main>
+
+    <!-- Cart Sidebar -->
+    <aside id="cart-sidebar" class="cart-sidebar fixed top-0 right-0 h-full w-full sm:w-80 bg-white shadow-xl z-50 flex flex-col">
+        <div class="flex-shrink-0 p-4 border-b flex justify-between items-center">
+            <h3 class="text-2xl font-semibold">Keranjang Belanja</h3>
+            <button id="close-cart-button" class="text-gray-500 hover:text-gray-800 transition-colors duration-200">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div id="cart-items" class="flex-grow p-4 overflow-y-auto space-y-4">
+            <!-- Cart items will be dynamically inserted here -->
+            <p id="empty-cart-message" class="text-center text-gray-500 mt-10">Keranjang Anda kosong.</p>
+        </div>
+        <div class="flex-shrink-0 p-4 border-t">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-xl font-semibold">Total:</span>
+                <span id="cart-total" class="text-2xl font-bold text-green-600">Rp 0</span>
+            </div>
+            <button id="checkout-button" class="w-full bg-green-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-600 transition-colors duration-200">
+                Selesai Bayar
+            </button>
+        </div>
+    </aside>
+
+    <!-- Modal for Checkout -->
+    <div id="checkout-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 pointer-events-none z-[100]">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm text-center">
+            <h4 class="text-3xl font-bold text-green-600 mb-4">Terima Kasih!</h4>
+            <p class="text-gray-700 mb-6">Pesanan Anda telah berhasil diproses.</p>
+            <button id="close-modal-button" class="bg-gray-200 hover:bg-gray-300 transition-colors duration-200 text-gray-800 font-semibold py-2 px-6 rounded-lg">Tutup</button>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Initialize Lucide icons
+        window.onload = () => {
+            lucide.createIcons();
+            renderProducts();
+        };
+
+        const products = [
+            {
+                id: 1,
+                name: "Laptop Ultrathin",
+                price: 15000000,
+                image: "https://placehold.co/600x400/2563eb/ffffff?text=Laptop",
+                description: "Laptop ringan dengan performa tinggi untuk produktivitas."
+            },
+            {
+                id: 2,
+                name: "Smartphone 5G",
+                price: 8500000,
+                image: "https://placehold.co/600x400/8b5cf6/ffffff?text=Smartphone",
+                description: "Kamera canggih dan konektivitas super cepat."
+            },
+            {
+                id: 3,
+                name: "Headphone Nirkabel",
+                price: 1200000,
+                image: "https://placehold.co/600x400/db2777/ffffff?text=Headphone",
+                description: "Audio jernih dengan fitur noise-cancellation."
+            },
+            {
+                id: 4,
+                name: "Smartwatch Sport",
+                price: 2500000,
+                image: "https://placehold.co/600x400/10b981/ffffff?text=Smartwatch",
+                description: "Pantau kesehatan dan aktivitas fisik Anda setiap hari."
+            },
+            {
+                id: 5,
+                name: "Kamera Digital",
+                price: 6750000,
+                image: "https://placehold.co/600x400/f59e0b/ffffff?text=Kamera",
+                description: "Ambil foto dan video berkualitas profesional dengan mudah."
+            },
+            {
+                id: 6,
+                name: "Keyboard Mekanik",
+                price: 950000,
+                image: "https://placehold.co/600x400/ef4444/ffffff?text=Keyboard",
+                description: "Desain ergonomis dengan tombol responsif untuk gaming dan mengetik."
+            },
+            {
+                id: 7,
+                name: "Mouse Nirkabel",
+                price: 350000,
+                image: "https://placehold.co/600x400/6b7280/ffffff?text=Mouse",
+                description: "Mouse yang nyaman digunakan dengan koneksi stabil."
+            },
+            {
+                id: 8,
+                name: "Speaker Bluetooth",
+                price: 700000,
+                image: "https://placehold.co/600x400/3b82f6/ffffff?text=Speaker",
+                description: "Suara powerful dan bass yang mendalam."
+            }
+        ];
+
+        let cart = [];
+
+        const productList = document.getElementById('product-list');
+        const cartButton = document.getElementById('cart-button');
+        const cartSidebar = document.getElementById('cart-sidebar');
+        const closeCartButton = document.getElementById('close-cart-button');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalSpan = document.getElementById('cart-total');
+        const cartCountSpan = document.getElementById('cart-count');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const checkoutButton = document.getElementById('checkout-button');
+        const checkoutModal = document.getElementById('checkout-modal');
+        const closeModalButton = document.getElementById('close-modal-button');
+
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        }
+
+        // Render products on the main page
+        function renderProducts() {
+            productList.innerHTML = '';
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-xl shadow-lg flex flex-col transform transition-transform hover:scale-105 duration-200';
+                card.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" class="rounded-lg mb-4 w-full h-48 object-cover">
+                    <h3 class="text-xl font-bold mb-2">${product.name}</h3>
+                    <p class="text-gray-600 text-sm mb-4 flex-grow">${product.description}</p>
+                    <div class="flex items-center justify-between mt-auto">
+                        <span class="text-2xl font-bold text-green-600">${formatRupiah(product.price)}</span>
+                        <button onclick="addToCart(${product.id})" class="bg-gray-900 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                            Tambah ke Keranjang
+                        </button>
+                    </div>
+                `;
+                productList.appendChild(card);
+            });
+        }
+
+        // Add item to cart
+        function addToCart(productId) {
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                const productToAdd = products.find(product => product.id === productId);
+                cart.push({ ...productToAdd, quantity: 1 });
+            }
+            updateCartUI();
+        }
+
+        // Update the cart UI and total
+        function updateCartUI() {
+            cartItemsContainer.innerHTML = '';
+            if (cart.length === 0) {
+                emptyCartMessage.classList.remove('hidden');
+            } else {
+                emptyCartMessage.classList.add('hidden');
+                cart.forEach(item => {
+                    const cartItem = document.createElement('div');
+                    cartItem.className = 'flex items-center space-x-4 p-4 bg-gray-50 rounded-lg';
+                    cartItem.innerHTML = `
+                        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-md object-cover">
+                        <div class="flex-grow">
+                            <p class="font-semibold">${item.name}</p>
+                            <p class="text-sm text-gray-600">${formatRupiah(item.price)}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-700">x${item.quantity}</span>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(cartItem);
+                });
+            }
+            updateCartTotal();
+        }
+
+        // Update total price and cart count
+        function updateCartTotal() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotalSpan.textContent = formatRupiah(total);
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCountSpan.textContent = totalItems;
+            if (totalItems > 0) {
+                cartCountSpan.classList.add('opacity-100');
+            } else {
+                cartCountSpan.classList.remove('opacity-100');
+            }
+        }
+
+        // Event listeners
+        cartButton.addEventListener('click', () => {
+            cartSidebar.classList.add('open');
+        });
+
+        closeCartButton.addEventListener('click', () => {
+            cartSidebar.classList.remove('open');
+        });
+
+        checkoutButton.addEventListener('click', () => {
+            if (cart.length > 0) {
+                checkoutModal.classList.add('open');
+                cart = []; // Clear the cart after "checkout"
+                updateCartUI();
+                cartSidebar.classList.remove('open');
+            }
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            checkoutModal.classList.remove('open');
+        });
+
+    </script>
+</body>
+</html>
